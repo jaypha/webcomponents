@@ -1,6 +1,6 @@
 {
   "name": "@jaypha/webcomponents",
-  "version": "0.1.0",
+  "version": "1.0.0-0",
   "description": "A bunch of vanilla web coponents",
   "main": "dist/webcomponents.cjs.js",
   "module": "dist/webcomponents.esm.js",

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <meta charset="UTF-8">
+ <title></title>
+ <script>
+  docReady = new Promise(function(resolve,reject) {
+    document.addEventListener("DOMContentLoaded", () => resolve(true));
+  });
+ </script>
+ <!-- load the webcomponents loader, which injects the necessary polyfill bundle -->
+ <script src="https://unpkg.com/@webcomponents/webcomponentsjs@2.1.3/webcomponents-loader.js"></script>
+ <script src='dist/webcomponents.umd.js'></script>
+ <script>
+
+  /* Define a custom column extending JayphaColumn */
+  class JayphaNumcolumn extends jayphaWebComponents.JayphaColumn
+  {
+    getDisplayValue(row)
+    {
+      let x = document.createElement("span");
+      x.innerText = row.getItem("c");
+      row.addEventListener("c", (p) => { x.innerText = p.get(); });
+      return x;
+    }
+  }
+  customElements.define('jaypha-numcolumn', JayphaNumcolumn);
+
+
+  function getButton(row)
+  {
+    let x = document.createElement("button");
+    x.innerText = "Press";
+    x.addEventListener("click", () => { row.proxy.c += 1;});
+    return x;
+  }
+
+ </script>
+</head>
+<body>
+
+<h2>Lists Demo</h2>
+
+<p>Columns 'Link', 'Number' and 'Date' are sotable. Click on the column header to
+   perform a sort. Column 'Increment' is not sortable. Clicking on it will do
+   nothing. </p>
+<jaypha-list columnorder='a c d b' sortby='c down'>
+ <!-- All columns are contained inside a jaypha-colgroup elements -->
+ <jaypha-colgroup>
+   <!-- Define a link via the 'link' attribute. Use ${} to subtitute data from
+        the current data row -->
+   <jaypha-column name='a' sortable link="xyz.html?id=${id}"  style='width:200px'>
+    Link
+   </jaypha-column>
+
+   <jaypha-datecolumn name='b' sortable format="{Do}&nbsp;{MM}&nbsp;{YYYY}"  style='width:100px'>
+    <!-- Column titles are defined inside the column definition. They can be wrapped
+         inside a label element -->
+    <label>Date</label>
+   </jaypha-datecolumn>
+
+   <jaypha-numcolumn name='c' sortable sortas='number'>
+    <i>Number</i>
+   </jaypha-numcolumn>
+
+   <!-- Use the code attribute for arbitrary javascript. The data row is exposed
+        as the local variabel 'row'. Caution! This can cause problems with
+        strict CSPs -->
+   <jaypha-column name='d' code="return getButton(row)">
+    <label><i>Increment</i></label>
+   </jaypha-column>
+  </jaypha-colgroup>
+
+ <!-- The table data is provided by an ordinary script element with the JSON
+      type set. -->
+ <script type='application/json'>
+  [
+    { "id": 1, "a" : "Able",  "b" : "2018-10-01", "c": 123},
+    { "id": 2, "a" : "Cain",  "b" : "2018-09-02", "c": 4},
+    { "id": 3, "a" : "Joseph",  "b" : "2018-10-03", "c": 5}
+  ]
+ </script>
+</jaypha-list>
+
+<button type='button' onclick='document.querySelector("jaypha-list").data.push({id:4,a:"Rufus",b:"2019-01-01",c:18})'>Click to add a row</button>
+<button type='button' onclick='document.querySelector("jaypha-list").columnOrder = ["a", "b", "c"]'>Click to change column order</button>
+
+<h2>Editable Demo</h2>
+
+<jaypha-editable style='border: 1px solid blue; padding: 3px;'>To be editable or <p>not</p> to be
+editable</jaypha-editable>
+
+<button type='button' onclick='alert(document.querySelector("jaypha-editable").value)'>Click</button>
+
+<h2>Enum Demo</h2>
+
+<p>
+ <jaypha-enum options='{ "a": "And", "o" : "Or", "x" : "Xor" }' value='o'></jaypha-enum>
+</p>
+
+<button onclick='document.querySelector("jaypha-enum").value = "a"'>Set to 'a'</button>
+<button onclick='document.querySelector("jaypha-enum").value = "x"'>Set to 'x'</button>
+<button onclick='document.querySelector("jaypha-enum").value = "z"'>Set to 'z'</button>
+
+</body>
+</html>
+

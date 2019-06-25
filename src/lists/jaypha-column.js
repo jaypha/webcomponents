@@ -38,12 +38,11 @@ export class JayphaColumn extends HTMLElement
     return this.hasAttribute("sortable");
   }
 
-//  set list(l) { console.log(l); }
   //-----------------------------------------------
 
   constructor()
   {
-    super(); // always call super() first in the ctor.
+    super(); // Required.
   }
 
   //-----------------------------------------------
@@ -58,6 +57,8 @@ export class JayphaColumn extends HTMLElement
     else
       return 'sorted-down';
   }
+
+  //-----------------------------------------------
 
   getHead()
   {

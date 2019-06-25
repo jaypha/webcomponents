@@ -302,12 +302,11 @@
       return this.hasAttribute("sortable");
     }
 
-  //  set list(l) { console.log(l); }
     //-----------------------------------------------
 
     constructor()
     {
-      super(); // always call super() first in the ctor.
+      super(); // Required.
     }
 
     //-----------------------------------------------
@@ -322,6 +321,8 @@
       else
         return 'sorted-down';
     }
+
+    //-----------------------------------------------
 
     getHead()
     {
@@ -700,7 +701,16 @@
 
     getDisplayValue(row)
     {
-      return this.format.render(new Date(row.getItem(this.name)));
+      let v = row.getItem(this.name);
+      if (v == null || v == "")
+        return "";
+      else
+      {
+        let d = new Date(v);
+        if (isNaN(d.getTime()))
+          return "invalid";
+        return this.format.render(d);
+      }
     }
   }
 
@@ -717,7 +727,13 @@
 
     getDisplayValue(row)
     {
-      return this._options[row.getItem(this.name)];
+      let v = row.getItem(this.name);
+      if (v == null || v == "")
+        return "";
+      else if (v in this._options)
+        return this._options[v];
+      else
+        return v;
     }
   }
 
@@ -832,10 +848,21 @@
         this.addEventListener("dataReady", () => resolve(this.data));
       });
 
-      // Create the table
+      this.filter = null;
+
+      let docReady = new Promise(function(resolve,reject) {
+        document.addEventListener("DOMContentLoaded", () => resolve(true));
+      });
+
       docReady.then(() =>
       {
+        // This should be done when the children have been creted and attached.
+        // There is no known way to capture this moment specifically.
+
         let fn = () => this.refresh();
+
+        // Read the data from the source (the script element). Then construct a
+        // bindable list from that data and store it.
         let dataElement = this.querySelector("script[type='application/json']");
 
         if (dataElement)
@@ -850,6 +877,8 @@
 
         // Data is ready. Fire the event.
         this.dispatchEvent(new Event("dataReady"));
+
+        // Now create the actual display table.
         this.tableElement = this.querySelector("table");
         if (!this.tableElement)
         {
@@ -865,10 +894,12 @@
     setData(newData)
     {
       this.data = bindableList(newData);
-      this.data.addEventListener("change", fn);
+      this.data.addEventListener("change", () => this.refresh());
       this.dispatchEvent(new Event("dataChanged"));
       this.refresh();
     }
+
+    //-------------------------------------------------------
 
     connectedCallback()
     {
@@ -966,13 +997,8 @@
         {
           if (!(idx in columnDefs))
             console.log("Error: column order '"+idx+"' is not in column definitions");
-          else {
-  //          let th = document.createElement("th");
-  //          th.className = self.getSortClass(idx);
-  //          th.innerHTML = columnDefs[idx].label;
-  //          th.onclick = (e) => self.setSort(idx);
+          else
             tr.appendChild(columnDefs[idx].getHead());
-          }
         }
       );
       thead.appendChild(tr);
@@ -986,7 +1012,8 @@
       let tbody = document.createElement("tbody");
       let l = this.data.length;
       for (let i=0; i<l; ++i)
-        tbody.appendChild(this.createRow(this.data[i]));
+        if (!this.filter || this.filter(this.data[i]))
+          tbody.appendChild(this.createRow(this.data[i]));
       return tbody;
     }
 

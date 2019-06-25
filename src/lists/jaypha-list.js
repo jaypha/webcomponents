@@ -109,12 +109,22 @@ export class JayphaList extends HTMLElement
       this.addEventListener("dataReady", () => resolve(this.data));
     });
 
-    // Create the table
+    this.filter = null;
+
+    let docReady = new Promise(function(resolve,reject) {
+      document.addEventListener("DOMContentLoaded", () => resolve(true));
+    });
+
     docReady.then(() =>
     {
-      let fn = () => this.refresh();
+      // This should be done when the children have been creted and attached.
+      // There is no known way to capture this moment specifically.
 
+      let fn = () => this.refresh();
       let a = [];
+
+      // Read the data from the source (the script element). Then construct a
+      // bindable list from that data and store it.
       let dataElement = this.querySelector("script[type='application/json']");
 
       if (dataElement)
@@ -129,6 +139,8 @@ export class JayphaList extends HTMLElement
 
       // Data is ready. Fire the event.
       this.dispatchEvent(new Event("dataReady"));
+
+      // Now create the actual display table.
       this.tableElement = this.querySelector("table");
       if (!this.tableElement)
       {
@@ -144,10 +156,12 @@ export class JayphaList extends HTMLElement
   setData(newData)
   {
     this.data = bindableList(newData);
-    this.data.addEventListener("change", fn);
+    this.data.addEventListener("change", () => this.refresh());
     this.dispatchEvent(new Event("dataChanged"));
     this.refresh();
   }
+
+  //-------------------------------------------------------
 
   connectedCallback()
   {
@@ -246,13 +260,8 @@ export class JayphaList extends HTMLElement
       {
         if (!(idx in columnDefs))
           console.log("Error: column order '"+idx+"' is not in column definitions");
-        else {
-//          let th = document.createElement("th");
-//          th.className = self.getSortClass(idx);
-//          th.innerHTML = columnDefs[idx].label;
-//          th.onclick = (e) => self.setSort(idx);
+        else
           tr.appendChild(columnDefs[idx].getHead());
-        }
       }
     );
     thead.appendChild(tr);
@@ -266,7 +275,8 @@ export class JayphaList extends HTMLElement
     let tbody = document.createElement("tbody");
     let l = this.data.length;
     for (let i=0; i<l; ++i)
-      tbody.appendChild(this.createRow(this.data[i]));
+      if (!this.filter || this.filter(this.data[i]))
+        tbody.appendChild(this.createRow(this.data[i]));
     return tbody;
   }
 

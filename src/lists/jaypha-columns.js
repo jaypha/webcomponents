@@ -19,7 +19,16 @@ class JayphaDatecolumn extends JayphaColumn
 
   getDisplayValue(row)
   {
-    return this.format.render(new Date(row.getItem(this.name)));
+    let v = row.getItem(this.name);
+    if (v == null || v == "")
+      return "";
+    else
+    {
+      let d = new Date(v);
+      if (isNaN(d.getTime()))
+        return "invalid";
+      return this.format.render(d);
+    }
   }
 }
 
@@ -36,7 +45,13 @@ class JayphaEnumcolumn extends JayphaColumn
 
   getDisplayValue(row)
   {
-    return this._options[row.getItem(this.name)];
+    let v = row.getItem(this.name);
+    if (v == null || v == "")
+      return "";
+    else if (v in this._options)
+      return this._options[v];
+    else
+      return v;
   }
 }
 

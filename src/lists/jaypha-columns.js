@@ -21,7 +21,7 @@ class JayphaDatecolumn extends JayphaColumn
   {
     let v = row.getItem(this.name);
     if (v == null || v == "")
-      return "";
+      return null;
     else
     {
       let d = new Date(v);
@@ -47,7 +47,7 @@ class JayphaEnumcolumn extends JayphaColumn
   {
     let v = row.getItem(this.name);
     if (v == null || v == "")
-      return "";
+      return null;
     else if (v in this._options)
       return this._options[v];
     else

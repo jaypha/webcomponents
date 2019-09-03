@@ -172,19 +172,23 @@ class JayphaColumn extends HTMLElement
   getSortFn(reverse)
   {
     let col = this.name;
+    let stripNull;
     switch(this.sortAs)
     {
       case "string":
+        // sorting does not handle nulls well
+        stripNull = (v) => v || "";
         if (reverse)
-          return (a,b) => b.getItem(col).localeCompare(a.getItem(col));
+          return (a,b) => stripNull(b.getItem(col)).localeCompare(stripNull(a.getItem(col)));
         else
-          return (a,b) => a.getItem(col).localeCompare(b.getItem(col));
+          return (a,b) => stripNull(a.getItem(col)).localeCompare(stripNull(b.getItem(col)));
         break;
       case "number":
+        stripNull = (v) => v || 0;
         if (reverse)
-          return (a,b) => b.getItem(col) - a.getItem(col);
+          return (a,b) => stripNull(b.getItem(col)) - stripNull(a.getItem(col));
         else
-          return (a,b) => a.getItem(col) - b.getItem(col);
+          return (a,b) => stripNull(a.getItem(col)) - stripNull(b.getItem(col))
         break;
       default: // sortAs describes a function
         let fn = new Function('a','b', this.sortAs);
@@ -200,7 +204,7 @@ class JayphaColumn extends HTMLElement
   getCellContent(row)
   {
     let content = this.getDisplayValue(row);
-    if (this.hasAttribute("link"))
+    if (this.hasAttribute("link") && (content != null))
       content = "<a href="+this.getLink(row)+">"+content+"</a>";
     return content;
   }
@@ -284,7 +288,7 @@ class JayphaDatecolumn extends JayphaColumn
   {
     let v = row.getItem(this.name);
     if (v == null || v == "")
-      return "";
+      return null;
     else
     {
       let d = new Date(v);
@@ -310,7 +314,7 @@ class JayphaEnumcolumn extends JayphaColumn
   {
     let v = row.getItem(this.name);
     if (v == null || v == "")
-      return "";
+      return null;
     else if (v in this._options)
       return this._options[v];
     else
@@ -612,10 +616,13 @@ class JayphaList extends HTMLElement
 
       let stuff = columnDefs[this.columnOrder[i]].getCellContent(row);
 
-      if (typeof(stuff) == "object")
-        td.appendChild(stuff);
-      else
-        td.innerHTML = stuff;
+      if (stuff !== null)
+      {
+        if (typeof(stuff) == "object")
+          td.appendChild(stuff);
+        else
+          td.innerHTML = stuff;
+      }
 
       tr.appendChild(td);
     }

@@ -294,10 +294,13 @@ export class JayphaList extends HTMLElement
 
       let stuff = columnDefs[this.columnOrder[i]].getCellContent(row);
 
-      if (typeof(stuff) == "object")
-        td.appendChild(stuff);
-      else
-        td.innerHTML = stuff;
+      if (stuff !== null)
+      {
+        if (typeof(stuff) == "object")
+          td.appendChild(stuff);
+        else
+          td.innerHTML = stuff;
+      }
 
       tr.appendChild(td);
     }

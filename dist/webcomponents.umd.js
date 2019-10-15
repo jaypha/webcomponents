@@ -823,6 +823,13 @@
         this.setAttribute("sortby", v.column+" "+v.dir);
     }
 
+    get dataColumnAsRowClass() {return this.getAttribute("datacolumnasrowclass"); }
+    set dataColumnAsRowClass(v)
+    {
+      this.setAttribute("datacolumnasrowclass", v);
+      this.refresh();
+    }
+
     //-------------------------------------------------------
 
     get columnDefs()
@@ -901,6 +908,7 @@
       this.data.addEventListener("change", () => this.refresh());
       this.dispatchEvent(new Event("dataChanged"));
       this.refresh();
+      return this.data;
     }
 
     //-------------------------------------------------------
@@ -1028,6 +1036,12 @@
       let columnDefs = this.columnDefs;
 
       let tr = document.createElement("tr");
+      let v = this.dataColumnAsRowClass;
+      if (v)
+      {
+        let className = row.getItem(v);
+        if (className) tr.className = className;
+      }
 
       for (let i=0; i<this.columnOrder.length; ++i)
       {

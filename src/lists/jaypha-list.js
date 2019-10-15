@@ -80,6 +80,13 @@ export class JayphaList extends HTMLElement
       this.setAttribute("sortby", v.column+" "+v.dir);
   }
 
+  get dataColumnAsRowClass() {return this.getAttribute("datacolumnasrowclass"); }
+  set dataColumnAsRowClass(v)
+  {
+    this.setAttribute("datacolumnasrowclass", v);
+    this.refresh();
+  }
+
   //-------------------------------------------------------
 
   get columnDefs()
@@ -159,6 +166,7 @@ export class JayphaList extends HTMLElement
     this.data.addEventListener("change", () => this.refresh());
     this.dispatchEvent(new Event("dataChanged"));
     this.refresh();
+    return this.data;
   }
 
   //-------------------------------------------------------
@@ -287,6 +295,12 @@ export class JayphaList extends HTMLElement
     let columnDefs = this.columnDefs;
 
     let tr = document.createElement("tr");
+    let v = this.dataColumnAsRowClass;
+    if (v)
+    {
+      let className = row.getItem(v);
+      if (className) tr.className = className;
+    }
 
     for (let i=0; i<this.columnOrder.length; ++i)
     {

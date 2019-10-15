@@ -31,6 +31,9 @@
   }
 
  </script>
+ <style>
+  .xyz { font-weight: bold; }
+ </style>
 </head>
 <body>
 
@@ -39,7 +42,7 @@
 <p>Columns 'Link', 'Number' and 'Date' are sotable. Click on the column header to
    perform a sort. Column 'Increment' is not sortable. Clicking on it will do
    nothing. </p>
-<jaypha-list columnorder='a c d b f' sortby='c down'>
+<jaypha-list columnorder='a c d b f' sortby='c down' datacolumnasrowclass='class'>
  <!-- All columns are contained inside a jaypha-colgroup elements -->
  <jaypha-colgroup>
    <!-- Define a link via the 'link' attribute. Use ${} to subtitute data from
@@ -74,10 +77,10 @@
       type set. -->
  <script type='application/json'>
   [
-    { "id": 1, "a" : "Able",  "b" : "2018-10-01", "c": 123, "f" : "a"},
-    { "id": 2, "a" : null,  "b" : "2018-09-02", "c": 4, "f" : "o"},
-    { "id": 3, "a" : "Joseph",  "b" : "2018-10-03", "c": 5, "f" : "a"},
-    { "id": 4, "a" : "mary",  "b" : null, "c": 5, "f" : "yy"}
+    { "id": 1, "a" : "Able",  "b" : "2018-10-01", "c": 123, "f" : "a", "class" : "xyz"},
+    { "id": 2, "a" : null,  "b" : "2018-09-02", "c": 4, "f" : "o", "class" : null},
+    { "id": 3, "a" : "Joseph",  "b" : "2018-10-03", "c": 5, "f" : "a", "class" : ""},
+    { "id": 4, "a" : "mary",  "b" : null, "c": 5, "f" : "yy", "class" : "xyz"}
   ]
  </script>
 </jaypha-list>

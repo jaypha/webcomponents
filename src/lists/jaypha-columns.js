@@ -19,12 +19,13 @@ class JayphaDatecolumn extends JayphaColumn
 
   getDisplayValue(row)
   {
-    let v = row.getItem(this.name);
+    let v = row[this.name];
     if (v == null || v == "")
       return null;
     else
     {
-      let d = new Date(v);
+      // Convert to YYYY/MM/DD to work with iOS.
+      let d = new Date(v.replace(/-/g, '/'));
       if (isNaN(d.getTime()))
         return "invalid";
       return this.format.render(d);
@@ -45,7 +46,7 @@ class JayphaEnumcolumn extends JayphaColumn
 
   getDisplayValue(row)
   {
-    let v = row.getItem(this.name);
+    let v = row[this.name];
     if (v == null || v == "")
       return null;
     else if (v in this._options)

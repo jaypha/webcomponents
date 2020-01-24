@@ -13,9 +13,9 @@
   "author": "Jason den Dulk",
   "license": "BSL-1.0",
   "devDependencies": {
-    "rollup": "^1.7.4",
-    "rollup-plugin-commonjs": "^9.2.2",
-    "rollup-plugin-node-resolve": "^4.0.1"
+    "rollup": "^1.29.1",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0"
   },
   "scripts": {
     "build": "rollup -c",
@@ -28,7 +28,6 @@
     "url": "https://github.com/jaypha/webcomponents.git"
   },
   "dependencies": {
-    "@jaypha/bindable": "^0.1.0",
     "tinytime": "^0.2.6"
   }
 }

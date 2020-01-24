@@ -2,7 +2,7 @@
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
   typeof define === 'function' && define.amd ? define(['exports'], factory) :
   (global = global || self, factory(global.jayphaWebComponents = {}));
-}(this, function (exports) { 'use strict';
+}(this, (function (exports) { 'use strict';
 
   //----------------------------------------------------------------------------
   // ES6 Module
@@ -92,178 +92,6 @@
 
   // Client side javascript
   //----------------------------------------------------------------------------
-  // Binding without the bloat
-  //----------------------------------------------------------------------------
-
-  // Binding works by allowing event handler to be attached to the value in
-  // question. When the value changes, the event is fired.
-
-
-  //----------------------------------------------------------------------------
-  // BindableValue is an object encapsulating a single value. You need to use
-  // get and set as simply sddigning will replace the object. Attach listeners
-  // using addEventListener. Every time set is called, the event fires.
-
-  class BindableValue
-  {
-    get() { return this._value; }
-
-    set(v) {
-      if (v !== this._value)
-      {
-        let prev = this._value;
-        this._value = v;
-        for (let i=0; i<this._listeners.length; ++i)
-          (this._listeners[i])(this, prev);
-      }
-    }
-
-    addEventListener(fn) {
-      this._listeners.push(fn);
-    }
-
-    trigger() {
-      for (let i=0; i<this._listeners.length; ++i)
-        (this._listeners[i])(this);
-    }
-
-    bindWidget(w) {
-      this.addEventListener(((o) => w.value=o.get()) );
-      w.addEventListener('change', (ev) => this.set(w.value));
-    }
-
-    constructor(initVal) {
-      this._listeners = [];
-      this._value = initVal;
-    }
-  }
-
-  //----------------------------------------------------------------------------
-  // BindableArray is similar to BindableObject, but for arrays. Adding,
-  // removing and rearranging the elements will trigger the 'add', 'remove' and
-  // 'rearrange' events respectively.
-
-
-
-  class BindableArray extends Array
-  {
-    constructor() {
-      super(...arguments);
-      this._listeners = { add:[], remove:[], rearrange: [], change: [] };
-    }
-
-    addEventListener(type, fn) { this._listeners[type].push(fn); }
-    fill() {
-      let result = super.fill(...arguments);
-      this.triggerEvent("change");
-      return result;
-    }
-    reverse() {
-      let result = super.reverse();
-      this.triggerEvent("rearrange");
-      this.triggerEvent("change");
-      return result;
-    }
-    sort(fn) {
-      let result = super.sort(fn);
-      this.triggerEvent("rearrange");
-      this.triggerEvent("change");
-      return result;
-    }
-    pop() {
-      let result = super.pop();
-      this.triggerEvent("remove");
-      this.triggerEvent("change");
-      return result;
-    }
-    shift() {
-      let result = super.shift();
-      this.triggerEvent("shift");
-      this.triggerEvent("change");
-      return result;
-    }
-    push() {
-      let result = super.push(...arguments);
-      this.triggerEvent("add");
-      this.triggerEvent("change");
-      return result;
-    }
-    unshift() {
-      let result = super.unshift(...arguments);
-      this.triggerEvent("add");
-      this.triggerEvent("change");
-      return result;
-    }
-    splice() {
-      let len = this.length;
-      let result = super.splice(...arguments);
-      if (result.length > 0)
-        this.triggerEvent("remove");
-      if (len - result.length < this.length)
-        this.triggerEvent("add");
-      this.triggerEvent("change");
-      return result;
-    }
-
-    triggerEvent(type)
-    {
-      for (let i=0; i<this._listeners[type].length; ++i)
-       (this._listeners[type][i])(this);
-    }
-  }
-
-  //----------------------------------------------------------------------------
-  // A BindableAssoc is an object where all the properties are
-  // BindableValues. It does not fire an event when you add and remove a
-  // property, but you can use addEventListener to add an event to a particular
-  // property.
-
-
-  class BindableAssoc
-  {
-    constructor(initVal)
-    {
-      this._props = {};
-      if (typeof(initVal) != "undefined")
-        for (let i in initVal)
-          this._props[i] = new BindableValue(initVal[i]);
-      this.proxy = new Proxy(
-        this,
-        {
-          set: function(target,p,v) { return target.setItem(p,v); },
-          get: function(target,p)  { return target.getItem(p);   }
-        });
-    }
-
-    getItem(p) { if (typeof(this._props[p]) != "undefined") return this._props[p].get(); }
-    setItem(p,v)
-    {
-      if (typeof(this._props[p]) == "undefined")
-        this._props[p] = new BindableValue(val);
-      else
-        this._props[p].set(v);
-      return true;
-    }
-    keys() { return Object.keys(this._props); }
-    removeItem(p) { delete target._props[p]; }
-
-    addEventListener(p, fn)
-    {
-      if (typeof(this._props[p]) == "undefined")
-        this._props[p] = new BindableValue();
-      this._props[p].addEventListener(fn);
-    }
-
-    bindWidget(p, wgt)
-    {
-      if (typeof(this._props[p]) == "undefined")
-        this._props[p] = new BindableValue();
-      this._props[p].bindWidget(wgt);
-    }
-  }
-
-  // Client side javascript
-  //----------------------------------------------------------------------------
   // 
   //----------------------------------------------------------------------------
 
@@ -348,17 +176,15 @@
           // sorting does not handle nulls well
           stripNull = (v) => v || "";
           if (reverse)
-            return (a,b) => stripNull(b.getItem(col)).localeCompare(stripNull(a.getItem(col)));
+            return (a,b) => stripNull(b[col]).localeCompare(stripNull(a[col]));
           else
-            return (a,b) => stripNull(a.getItem(col)).localeCompare(stripNull(b.getItem(col)));
-          break;
+            return (a,b) => stripNull(a[col]).localeCompare(stripNull(b[col]));
         case "number":
           stripNull = (v) => v || 0;
           if (reverse)
-            return (a,b) => stripNull(b.getItem(col)) - stripNull(a.getItem(col));
+            return (a,b) => stripNull(b[col]) - stripNull(a[col]);
           else
-            return (a,b) => stripNull(a.getItem(col)) - stripNull(b.getItem(col))
-          break;
+            return (a,b) => stripNull(a[col]) - stripNull(b[col])
         default: // sortAs describes a function
           let fn = new Function('a','b', this.sortAs);
           if (reverse)
@@ -393,7 +219,7 @@
         return this.fn(row);
       }
       else
-        return row.getItem(this.name);
+        return row[this.name];
     }
 
     //-----------------------------------------------
@@ -416,10 +242,11 @@
 
     simpleSub(s, v)
     {
-      for (const i of v.keys())
+      //for (const i of v.keys())
+      for (let i in v)
       {
         let r = new RegExp("\\${"+i+"}","g");
-        s = s.replace(r, v.getItem(i));
+        s = s.replace(r, v[i]);
       }
       return s;
     }
@@ -705,12 +532,13 @@
 
     getDisplayValue(row)
     {
-      let v = row.getItem(this.name);
+      let v = row[this.name];
       if (v == null || v == "")
         return null;
       else
       {
-        let d = new Date(v);
+        // Convert to YYYY/MM/DD to work with iOS.
+        let d = new Date(v.replace(/-/g, '/'));
         if (isNaN(d.getTime()))
           return "invalid";
         return this.format.render(d);
@@ -731,7 +559,7 @@
 
     getDisplayValue(row)
     {
-      let v = row.getItem(this.name);
+      let v = row[this.name];
       if (v == null || v == "")
         return null;
       else if (v in this._options)
@@ -750,34 +578,6 @@
   //
 
   //----------------------------------------------------------------------------
-
-  function bindableList(initVal)
-  {
-    let a = new Proxy({
-      _array: new BindableArray(),
-    },
-    {
-      get: function(target, prop)
-      {
-        const val = target._array[prop];
-        if (typeof val == "function") {
-          if (["push", "unshift"].includes(prop))
-            return function (el) {
-              return target._array[prop](new BindableAssoc(el));
-            }
-          return val.bind(target._array);
-        }
-        return val;
-      }
-    });
-
-    if (typeof(initVal) !== "undefined")
-    {
-      for (let i=0; i<initVal.length; ++i)
-        a.push(initVal[i]);
-    }
-    return a;
-  }
 
   //----------------------------------------------------------------------------
   //
@@ -860,52 +660,13 @@
       });
 
       this.filter = null;
-
-      let docReady = new Promise(function(resolve,reject) {
-        document.addEventListener("DOMContentLoaded", () => resolve(true));
-      });
-
-      docReady.then(() =>
-      {
-        // This should be done when the children have been creted and attached.
-        // There is no known way to capture this moment specifically.
-
-        let fn = () => this.refresh();
-
-        // Read the data from the source (the script element). Then construct a
-        // bindable list from that data and store it.
-        let dataElement = this.querySelector("script[type='application/json']");
-
-        if (dataElement)
-        {
-          let newData = JSON.parse(dataElement.innerText);
-          this.data = bindableList(newData);
-        }
-        else
-          this.data = bindableList();
-
-        this.data.addEventListener("change", fn);
-
-        // Data is ready. Fire the event.
-        this.dispatchEvent(new Event("dataReady"));
-
-        // Now create the actual display table.
-        this.tableElement = this.querySelector("table");
-        if (!this.tableElement)
-        {
-          this.tableElement = document.createElement("table");
-          this.appendChild(this.tableElement);
-        }
-        this.refresh();
-      });
     }
     
     //-------------------------------------------------------
 
     setData(newData)
     {
-      this.data = bindableList(newData);
-      this.data.addEventListener("change", () => this.refresh());
+      this.data = newData;
       this.dispatchEvent(new Event("dataChanged"));
       this.refresh();
       return this.data;
@@ -913,8 +674,42 @@
 
     //-------------------------------------------------------
 
+    whenReady()
+    {
+
+      // Read the data from the source (the script element). Then construct a
+      // bindable list from that data and store it.
+      let dataElement = this.querySelector("script[type='application/json']");
+
+      if (dataElement)
+      {
+        let newData = JSON.parse(dataElement.innerText);
+        this.data = newData;
+      }
+      else
+        this.data = [];
+
+      //this.data.addEventListener("change", fn);
+
+      // Data is ready. Fire the event.
+      this.dispatchEvent(new Event("dataReady"));
+
+      // Now create the actual display table.
+      this.tableElement = this.querySelector("table");
+      if (!this.tableElement)
+      {
+        this.tableElement = document.createElement("table");
+        this.appendChild(this.tableElement);
+      }
+      this.refresh();
+    };
+
     connectedCallback()
     {
+      if (document.readyState === "loading")
+        document.addEventListener("DOMContentLoaded", () => { this.whenReady(); });
+      else
+        this.whenReady();
     }
 
     //-------------------------------------------------------
@@ -963,6 +758,7 @@
           this.columnDefs[sortColumn.column]
             .getSortFn(sortColumn.dir == "down")
         );
+        this.refresh();
       }
     }
 
@@ -1039,7 +835,7 @@
       let v = this.dataColumnAsRowClass;
       if (v)
       {
-        let className = row.getItem(v);
+        let className = row[v];
         if (className) tr.className = className;
       }
 
@@ -1114,14 +910,6 @@
   // Author: Jason den Dulk
   //
 
-  //----------------------------------------------------------------------------
-
-  //----------------------------------------------------------------------------
-  // Copyright (C) 2019 Jaypha
-  // License: BSL-1.0
-  // Authors: Jason den Dulk
-  //
-
   exports.JayphaColumn = JayphaColumn;
   exports.JayphaEditable = JayphaEditable;
   exports.JayphaEnum = JayphaEnum;
@@ -1129,4 +917,4 @@
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
-}));
+})));

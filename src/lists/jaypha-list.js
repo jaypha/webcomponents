@@ -4,37 +4,8 @@
 // 
 //----------------------------------------------------------------------------
 
-import { BindableArray, BindableAssoc } from "@jaypha/bindable";
 export { JayphaColumn } from "./jaypha-column.js";
 import "./jaypha-columns.js";
-
-function bindableList(initVal)
-{
-  let a = new Proxy({
-    _array: new BindableArray(),
-  },
-  {
-    get: function(target, prop)
-    {
-      const val = target._array[prop];
-      if (typeof val == "function") {
-        if (["push", "unshift"].includes(prop))
-          return function (el) {
-            return target._array[prop](new BindableAssoc(el));
-          }
-        return val.bind(target._array);
-      }
-      return val;
-    }
-  });
-
-  if (typeof(initVal) !== "undefined")
-  {
-    for (let i=0; i<initVal.length; ++i)
-      a.push(initVal[i]);
-  }
-  return a;
-}
 
 //----------------------------------------------------------------------------
 //
@@ -117,53 +88,13 @@ export class JayphaList extends HTMLElement
     });
 
     this.filter = null;
-
-    let docReady = new Promise(function(resolve,reject) {
-      document.addEventListener("DOMContentLoaded", () => resolve(true));
-    });
-
-    docReady.then(() =>
-    {
-      // This should be done when the children have been creted and attached.
-      // There is no known way to capture this moment specifically.
-
-      let fn = () => this.refresh();
-      let a = [];
-
-      // Read the data from the source (the script element). Then construct a
-      // bindable list from that data and store it.
-      let dataElement = this.querySelector("script[type='application/json']");
-
-      if (dataElement)
-      {
-        let newData = JSON.parse(dataElement.innerText);
-        this.data = bindableList(newData);
-      }
-      else
-        this.data = bindableList();
-
-      this.data.addEventListener("change", fn);
-
-      // Data is ready. Fire the event.
-      this.dispatchEvent(new Event("dataReady"));
-
-      // Now create the actual display table.
-      this.tableElement = this.querySelector("table");
-      if (!this.tableElement)
-      {
-        this.tableElement = document.createElement("table");
-        this.appendChild(this.tableElement);
-      }
-      this.refresh();
-    });
   }
   
   //-------------------------------------------------------
 
   setData(newData)
   {
-    this.data = bindableList(newData);
-    this.data.addEventListener("change", () => this.refresh());
+    this.data = newData;
     this.dispatchEvent(new Event("dataChanged"));
     this.refresh();
     return this.data;
@@ -171,8 +102,47 @@ export class JayphaList extends HTMLElement
 
   //-------------------------------------------------------
 
+  whenReady()
+  {
+    // This should be done when the children have been created and attached.
+    // There is no known way to capture this moment specifically.
+
+    let fn = () => this.refresh();
+    let a = [];
+
+    // Read the data from the source (the script element). Then construct a
+    // bindable list from that data and store it.
+    let dataElement = this.querySelector("script[type='application/json']");
+
+    if (dataElement)
+    {
+      let newData = JSON.parse(dataElement.innerText);
+      this.data = newData;
+    }
+    else
+      this.data = [];
+
+    //this.data.addEventListener("change", fn);
+
+    // Data is ready. Fire the event.
+    this.dispatchEvent(new Event("dataReady"));
+
+    // Now create the actual display table.
+    this.tableElement = this.querySelector("table");
+    if (!this.tableElement)
+    {
+      this.tableElement = document.createElement("table");
+      this.appendChild(this.tableElement);
+    }
+    this.refresh();
+  };
+
   connectedCallback()
   {
+    if (document.readyState === "loading")
+      document.addEventListener("DOMContentLoaded", () => { this.whenReady() });
+    else
+      this.whenReady();
   }
 
   //-------------------------------------------------------
@@ -221,6 +191,7 @@ export class JayphaList extends HTMLElement
         this.columnDefs[sortColumn.column]
           .getSortFn(sortColumn.dir == "down")
       );
+      this.refresh();
     }
   }
 
@@ -298,7 +269,7 @@ export class JayphaList extends HTMLElement
     let v = this.dataColumnAsRowClass;
     if (v)
     {
-      let className = row.getItem(v);
+      let className = row[v];
       if (className) tr.className = className;
     }
 

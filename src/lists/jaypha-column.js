@@ -84,16 +84,16 @@ export class JayphaColumn extends HTMLElement
         // sorting does not handle nulls well
         stripNull = (v) => v || "";
         if (reverse)
-          return (a,b) => stripNull(b.getItem(col)).localeCompare(stripNull(a.getItem(col)));
+          return (a,b) => stripNull(b[col]).localeCompare(stripNull(a[col]));
         else
-          return (a,b) => stripNull(a.getItem(col)).localeCompare(stripNull(b.getItem(col)));
+          return (a,b) => stripNull(a[col]).localeCompare(stripNull(b[col]));
         break;
       case "number":
         stripNull = (v) => v || 0;
         if (reverse)
-          return (a,b) => stripNull(b.getItem(col)) - stripNull(a.getItem(col));
+          return (a,b) => stripNull(b[col]) - stripNull(a[col]);
         else
-          return (a,b) => stripNull(a.getItem(col)) - stripNull(b.getItem(col))
+          return (a,b) => stripNull(a[col]) - stripNull(b[col])
         break;
       default: // sortAs describes a function
         let fn = new Function('a','b', this.sortAs);
@@ -129,7 +129,7 @@ export class JayphaColumn extends HTMLElement
       return this.fn(row);
     }
     else
-      return row.getItem(this.name);
+      return row[this.name];
   }
 
   //-----------------------------------------------
@@ -152,10 +152,11 @@ export class JayphaColumn extends HTMLElement
 
   simpleSub(s, v)
   {
-    for (const i of v.keys())
+    //for (const i of v.keys())
+    for (let i in v)
     {
       let r = new RegExp("\\${"+i+"}","g");
-      s = s.replace(r, v.getItem(i));
+      s = s.replace(r, v[i]);
     }
     return s;
   }

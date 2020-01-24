@@ -1,4 +1,3 @@
-import { BindableArray, BindableAssoc } from '@jaypha/bindable';
 import tinytime from 'tinytime';
 
 //----------------------------------------------------------------------------
@@ -173,17 +172,15 @@ class JayphaColumn extends HTMLElement
         // sorting does not handle nulls well
         stripNull = (v) => v || "";
         if (reverse)
-          return (a,b) => stripNull(b.getItem(col)).localeCompare(stripNull(a.getItem(col)));
+          return (a,b) => stripNull(b[col]).localeCompare(stripNull(a[col]));
         else
-          return (a,b) => stripNull(a.getItem(col)).localeCompare(stripNull(b.getItem(col)));
-        break;
+          return (a,b) => stripNull(a[col]).localeCompare(stripNull(b[col]));
       case "number":
         stripNull = (v) => v || 0;
         if (reverse)
-          return (a,b) => stripNull(b.getItem(col)) - stripNull(a.getItem(col));
+          return (a,b) => stripNull(b[col]) - stripNull(a[col]);
         else
-          return (a,b) => stripNull(a.getItem(col)) - stripNull(b.getItem(col))
-        break;
+          return (a,b) => stripNull(a[col]) - stripNull(b[col])
       default: // sortAs describes a function
         let fn = new Function('a','b', this.sortAs);
         if (reverse)
@@ -218,7 +215,7 @@ class JayphaColumn extends HTMLElement
       return this.fn(row);
     }
     else
-      return row.getItem(this.name);
+      return row[this.name];
   }
 
   //-----------------------------------------------
@@ -241,10 +238,11 @@ class JayphaColumn extends HTMLElement
 
   simpleSub(s, v)
   {
-    for (const i of v.keys())
+    //for (const i of v.keys())
+    for (let i in v)
     {
       let r = new RegExp("\\${"+i+"}","g");
-      s = s.replace(r, v.getItem(i));
+      s = s.replace(r, v[i]);
     }
     return s;
   }
@@ -280,12 +278,13 @@ class JayphaDatecolumn extends JayphaColumn
 
   getDisplayValue(row)
   {
-    let v = row.getItem(this.name);
+    let v = row[this.name];
     if (v == null || v == "")
       return null;
     else
     {
-      let d = new Date(v);
+      // Convert to YYYY/MM/DD to work with iOS.
+      let d = new Date(v.replace(/-/g, '/'));
       if (isNaN(d.getTime()))
         return "invalid";
       return this.format.render(d);
@@ -306,7 +305,7 @@ class JayphaEnumcolumn extends JayphaColumn
 
   getDisplayValue(row)
   {
-    let v = row.getItem(this.name);
+    let v = row[this.name];
     if (v == null || v == "")
       return null;
     else if (v in this._options)
@@ -325,34 +324,6 @@ customElements.define('jaypha-enumcolumn', JayphaEnumcolumn);
 //
 
 //----------------------------------------------------------------------------
-
-function bindableList(initVal)
-{
-  let a = new Proxy({
-    _array: new BindableArray(),
-  },
-  {
-    get: function(target, prop)
-    {
-      const val = target._array[prop];
-      if (typeof val == "function") {
-        if (["push", "unshift"].includes(prop))
-          return function (el) {
-            return target._array[prop](new BindableAssoc(el));
-          }
-        return val.bind(target._array);
-      }
-      return val;
-    }
-  });
-
-  if (typeof(initVal) !== "undefined")
-  {
-    for (let i=0; i<initVal.length; ++i)
-      a.push(initVal[i]);
-  }
-  return a;
-}
 
 //----------------------------------------------------------------------------
 //
@@ -435,52 +406,13 @@ class JayphaList extends HTMLElement
     });
 
     this.filter = null;
-
-    let docReady = new Promise(function(resolve,reject) {
-      document.addEventListener("DOMContentLoaded", () => resolve(true));
-    });
-
-    docReady.then(() =>
-    {
-      // This should be done when the children have been creted and attached.
-      // There is no known way to capture this moment specifically.
-
-      let fn = () => this.refresh();
-
-      // Read the data from the source (the script element). Then construct a
-      // bindable list from that data and store it.
-      let dataElement = this.querySelector("script[type='application/json']");
-
-      if (dataElement)
-      {
-        let newData = JSON.parse(dataElement.innerText);
-        this.data = bindableList(newData);
-      }
-      else
-        this.data = bindableList();
-
-      this.data.addEventListener("change", fn);
-
-      // Data is ready. Fire the event.
-      this.dispatchEvent(new Event("dataReady"));
-
-      // Now create the actual display table.
-      this.tableElement = this.querySelector("table");
-      if (!this.tableElement)
-      {
-        this.tableElement = document.createElement("table");
-        this.appendChild(this.tableElement);
-      }
-      this.refresh();
-    });
   }
   
   //-------------------------------------------------------
 
   setData(newData)
   {
-    this.data = bindableList(newData);
-    this.data.addEventListener("change", () => this.refresh());
+    this.data = newData;
     this.dispatchEvent(new Event("dataChanged"));
     this.refresh();
     return this.data;
@@ -488,8 +420,42 @@ class JayphaList extends HTMLElement
 
   //-------------------------------------------------------
 
+  whenReady()
+  {
+
+    // Read the data from the source (the script element). Then construct a
+    // bindable list from that data and store it.
+    let dataElement = this.querySelector("script[type='application/json']");
+
+    if (dataElement)
+    {
+      let newData = JSON.parse(dataElement.innerText);
+      this.data = newData;
+    }
+    else
+      this.data = [];
+
+    //this.data.addEventListener("change", fn);
+
+    // Data is ready. Fire the event.
+    this.dispatchEvent(new Event("dataReady"));
+
+    // Now create the actual display table.
+    this.tableElement = this.querySelector("table");
+    if (!this.tableElement)
+    {
+      this.tableElement = document.createElement("table");
+      this.appendChild(this.tableElement);
+    }
+    this.refresh();
+  };
+
   connectedCallback()
   {
+    if (document.readyState === "loading")
+      document.addEventListener("DOMContentLoaded", () => { this.whenReady(); });
+    else
+      this.whenReady();
   }
 
   //-------------------------------------------------------
@@ -538,6 +504,7 @@ class JayphaList extends HTMLElement
         this.columnDefs[sortColumn.column]
           .getSortFn(sortColumn.dir == "down")
       );
+      this.refresh();
     }
   }
 
@@ -614,7 +581,7 @@ class JayphaList extends HTMLElement
     let v = this.dataColumnAsRowClass;
     if (v)
     {
-      let className = row.getItem(v);
+      let className = row[v];
       if (className) tr.className = className;
     }
 
@@ -687,14 +654,6 @@ customElements.define('jaypha-editable', JayphaEditable);
 // Copyright (C) 2018 Jaypha.
 // License: BSL-1.0
 // Author: Jason den Dulk
-//
-
-//----------------------------------------------------------------------------
-
-//----------------------------------------------------------------------------
-// Copyright (C) 2019 Jaypha
-// License: BSL-1.0
-// Authors: Jason den Dulk
 //
 
 export { JayphaColumn, JayphaEditable, JayphaEnum, JayphaList };

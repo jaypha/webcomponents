@@ -6,6 +6,8 @@ No framework required.
 
 Available in ES6, UMD and CJS.
 
+**Important!** As of version 2, lists no longer uses Bindable.
+
 ## Installation
 
 `npm install --save @jaypha/webcomponents`
@@ -14,7 +16,6 @@ Use `--save-dev` if you intend to incorporate this module into our own bundles.
 
 ## Dependencies
 
-* @jaypha/bindable
 * tinytime (for jaypha-datecolumn)
 * [Web components polyfill](https://www.webcomponents.org/polyfills/)
 
@@ -26,7 +27,6 @@ A list component that constructs a list from a set of data. The list can be
 * sortable
 * column definitions including formating.
 * columns can have their order rearranged.
-* Makes used of data bindings so you can manipulate the data structure and have the display change accordingly.
 
 ### jaypha-editable
 
@@ -48,6 +48,13 @@ shortcommings.
 * Documentation
 * Spinput.
 * Transpile UMD to make available for older browsers.
+
+## Release Notes
+
+**2.0.0** Stopped using Bindable. Row objects are now just ordinary object, so you can no
+longer use getItem, setItem or removeItem.
+
+You can still use bindable values by including them in a column definition.
 
 ## License
 

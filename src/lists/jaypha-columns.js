@@ -9,6 +9,7 @@ import { JayphaColumn } from "./jaypha-column.js";
 //----------------------------------------------------------------------------
 
 import tinytime from "tinytime";
+import dayjs from "dayjs";
 
 class JayphaDatecolumn extends JayphaColumn
 {
@@ -24,11 +25,10 @@ class JayphaDatecolumn extends JayphaColumn
       return null;
     else
     {
-      // Convert to YYYY/MM/DD to work with iOS.
-      let d = new Date(v.replace(/-/g, '/'));
-      if (isNaN(d.getTime()))
+      let d = dayjs(v);
+      if (!d.isValid())
         return "invalid";
-      return this.format.render(d);
+      return this.format.render(d.toDate());
     }
   }
 }

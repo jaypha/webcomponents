@@ -17,6 +17,7 @@ Use `--save-dev` if you intend to incorporate this module into our own bundles.
 ## Dependencies
 
 * tinytime (for jaypha-datecolumn)
+* dayjs (for jaypha-datecolumn)
 * [Web components polyfill](https://www.webcomponents.org/polyfills/)
 
 ## The Components
@@ -51,6 +52,8 @@ shortcommings.
 
 ## Release Notes
 
+**2.0.1** Added Day.js as a dependency, to ensure that jayph-datecolumn will parse
+dates correctly.  
 **2.0.0** Stopped using Bindable. Row objects are now just ordinary object, so you can no
 longer use getItem, setItem or removeItem.
 

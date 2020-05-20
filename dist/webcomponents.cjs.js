@@ -5,6 +5,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
 var tinytime = _interopDefault(require('tinytime'));
+var dayjs = _interopDefault(require('dayjs'));
 
 //----------------------------------------------------------------------------
 // ES6 Module
@@ -289,11 +290,12 @@ class JayphaDatecolumn extends JayphaColumn
       return null;
     else
     {
+      let d = dayjs(v,true);
       // Convert to YYYY/MM/DD to work with iOS.
-      let d = new Date(v.replace(/-/g, '/'));
-      if (isNaN(d.getTime()))
+      //let d = new Date(v.replace(/-/g, '/'));
+      if (!d.isValid())
         return "invalid";
-      return this.format.render(d);
+      return this.format.render(d.toDate());
     }
   }
 }
